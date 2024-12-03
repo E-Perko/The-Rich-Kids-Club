@@ -1,5 +1,4 @@
-# spis16-webapps-oauth-example
-
+# The-Rich-Kids-Club
 main branch uses Bootstrap 3.
 main branch running at https://spis16-webapps-oauth-example.onrender.com/
 
