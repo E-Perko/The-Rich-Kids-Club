@@ -5,10 +5,17 @@
 {% block content %}
   <h1>Gloat about your riches here.</h1>
 
-<p>Lorem ipsum sit dolor amet.</p>
-
 <pre>
 {{ dump_user_data }}
 </pre>
+
+<div class="container">
+  <form>
+    <div class="form-group">
+      <label for="usr">Type anything here:</label>
+      <input type="text" class="form-control" id="usr">
+    </div>
+  </form>
+</div>
 
 {% endblock %}
