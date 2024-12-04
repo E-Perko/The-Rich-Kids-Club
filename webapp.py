@@ -3,13 +3,10 @@ from flask_oauthlib.client import OAuth
 #from flask_oauthlib.contrib.apps import github #import to make requests to GitHub's OAuth
 from flask import render_template
 
-import pprint
+import pymongo
 import os
-
-# This code originally from https://github.com/lepture/flask-oauthlib/blob/master/example/github.py
-# Edited by P. Conrad for SPIS 2016 to add getting Client Id and Secret from
-# environment variables, so that this will work on Heroku.
-# Edited by S. Adams for Designing Software for the Web to add comments and remove flash messaging
+import sys
+import pprint
 
 app = Flask(__name__)
 
@@ -33,14 +30,21 @@ github = oauth.remote_app(
     authorize_url='https://github.com/login/oauth/authorize' #URL for github's OAuth login
 )
 
-
-#context processors run before templates are rendered and add variable(s) to the template's context
-#context processors must return a dictionary 
-#this context processor adds the variable logged_in to the conext for all templates
 @app.context_processor
 def inject_logged_in():
     is_logged_in = 'github_token' in session #this will be true if the token is in the session and false otherwise
     return {"logged_in":is_logged_in}
+    
+def main():
+    connection_string = os.environ["MONGO_CONNECTION_STRING"]
+    usersdb_name = os.environ["MONGO_DBNAME1"]
+    postsdb_name = os.environ["MONGO_DBNAME2"]
+    
+    client = pymongo.MongoClient(connection_string)
+    usersdb = client[usersdb_name]
+    postsdb = client[postsdb_name]
+    mongoUsers = db['User_info']
+    mongoPosts = db['Posts']
 
 @app.route('/')
 def home():
