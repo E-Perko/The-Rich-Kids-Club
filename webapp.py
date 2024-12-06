@@ -2,6 +2,7 @@ from flask import Flask, redirect, url_for, session, request, jsonify
 from flask_oauthlib.client import OAuth
 #from flask_oauthlib.contrib.apps import github #import to make requests to GitHub's OAuth
 from flask import render_template
+from markupsafe import Markup
 
 import pymongo
 import os
@@ -30,21 +31,20 @@ github = oauth.remote_app(
     authorize_url='https://github.com/login/oauth/authorize' #URL for github's OAuth login
 )
 
+connection_string = os.environ["MONGO_CONNECTION_STRING"]
+usersdb_name = os.environ["MONGO_DBNAME1"]
+postsdb_name = os.environ["MONGO_DBNAME2"]
+
+client = pymongo.MongoClient(connection_string)
+usersdb = client[usersdb_name]
+postsdb = client[postsdb_name]
+mongoUsers = usersdb['User_info']
+mongoPosts = postsdb['Posts']
+
 @app.context_processor
 def inject_logged_in():
     is_logged_in = 'github_token' in session #this will be true if the token is in the session and false otherwise
     return {"logged_in":is_logged_in}
-    
-def main():
-    connection_string = os.environ["MONGO_CONNECTION_STRING"]
-    usersdb_name = os.environ["MONGO_DBNAME1"]
-    postsdb_name = os.environ["MONGO_DBNAME2"]
-    
-    client = pymongo.MongoClient(connection_string)
-    usersdb = client[usersdb_name]
-    postsdb = client[postsdb_name]
-    mongoUsers = db['User_info']
-    mongoPosts = db['Posts']
 
 @app.route('/')
 def home():
@@ -83,19 +83,20 @@ def authorized():
 
 @app.route('/page1')
 def renderPage1():
-    if 'user_data' in session:
-        user_data_pprint = pprint.pformat(session['user_data'])#format the user data nicely
-    else:
-        user_data_pprint = '';
-    return render_template('page1.html',dump_user_data=user_data_pprint)
-
-@app.route('/page2')
-def renderPage2():
-    if 'user_data' in session:
-        user_login_pprint = pprint.pformat(session['user_data']['login'])#format the user data nicely
-    else:
-        user_login_pprint = '';
-    return render_template('page2.html',dump_user_data=user_login_pprint)
+    posts = ""
+    for doc in mongoPosts.find():
+        posts += Markup("<p>" + str(doc["User"]) + ": " + str(doc["Post"]) + "</p>" + "<br>")
+    return render_template('page1.html', posts=posts)
+    
+@app.route("/createPost", methods=['GET','POST'])
+def render_post():
+    content = request.form['content']
+    doc = {"User":"value1", "Post":content}
+    mongoPosts.insert_one(doc)
+    posts = ""
+    for doc in mongoPosts.find():
+        posts += Markup("<p>" + str(doc["User"]) + ": " + str(doc["Post"]) + "</p>" + "<br>")
+    return render_template('page1.html', posts=posts)
 
 @app.route('/googleb4c3aeedcc2dd103.html')
 def render_google_verification():
@@ -108,4 +109,4 @@ def get_github_oauth_token():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)

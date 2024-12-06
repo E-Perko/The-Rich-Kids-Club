@@ -7,11 +7,17 @@
 
 <p>Mirror mirror on the wall, who is the wealthiest of them all?</p>
 
+<br>
+
+<p>{{ posts }}</p>
+
+<br>
+
 <div class="container">
-  <form>
+  <form action=/createPost method="POST">
     <div class="form-group">
-      <label for="usr">Type anything here:</label>
-      <input type="text" class="form-control" id="usr">
+      <label for="content">Type anything here:</label>
+      <input type="text" class="form-control" id="content" name="content" required>
 	  <br>
 	  <input type="submit">
     </div>
