@@ -50,7 +50,6 @@ def inject_logged_in():
 def home():
     return render_template('home.html')
 
-#redirect to GitHub's OAuth page and confirm callback URL
 @app.route('/login')
 def login():   
     return github.authorize(callback=url_for('authorized', _external=True, _scheme='http')) #callback URL must match the pre-configured callback URL
@@ -70,9 +69,7 @@ def authorized():
         try:
             session['github_token'] = (resp['access_token'], '') #save the token to prove that the user logged in
             session['user_data']=github.get('user').data
-            session['user_login']=github.get('login').data
-            #pprint.pprint(vars(github['/email']))
-            #pprint.pprint(vars(github['api/2/accounts/profile/']))
+            session['user_login']=github.get('login').data 
             message='You were successfully logged in as ' + session['user_data']['login'] + '.'
         except Exception as inst:
             session.clear()
@@ -81,28 +78,29 @@ def authorized():
     return render_template('message.html', message=message)
 
 
-@app.route('/page1')
-def renderPage1():
+@app.route('/thechatroom')
+def renderTheChatRoom():
+    
     posts = ""
     for doc in mongoPosts.find():
         posts += Markup("<p>" + str(doc["User"]) + ": " + str(doc["Post"]) + "</p>" + "<br>")
-    return render_template('page1.html', posts=posts)
+    return render_template('thechatroom.html', posts=posts)
     
 @app.route("/createPost", methods=['GET','POST'])
 def render_post():
     content = request.form['content']
-    doc = {"User":"value1", "Post":content}
+    username = session['user_data']['login']
+    doc = {"User": username, "Post":content}
     mongoPosts.insert_one(doc)
     posts = ""
     for doc in mongoPosts.find():
         posts += Markup("<p>" + str(doc["User"]) + ": " + str(doc["Post"]) + "</p>" + "<br>")
-    return render_template('page1.html', posts=posts)
+    return render_template('thechatroom.html', posts=posts)
 
 @app.route('/googleb4c3aeedcc2dd103.html')
 def render_google_verification():
     return render_template('googleb4c3aeedcc2dd103.html')
 
-#the tokengetter is automatically called to check who is logged in.
 @github.tokengetter
 def get_github_oauth_token():
     return session['github_token']
