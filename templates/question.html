@@ -1,1 +1,27 @@
+{% extends "layout.html" %}
 
+{% block title %}A Quick Question...{% endblock %}
+
+{% block content %}
+  <h1>A Quick Question...</h1>
+
+<p>Mirror mirror on the wall, who is the wealthiest of them all?</p>
+
+<br>
+
+<p>{{ posts }}</p>
+
+<br>
+
+doc = {“key1”:“value1”, “key2”:“value2”}
+collection.insert_one(doc)
+
+<div class="container">
+	<form action="/action_page.php">
+		<label for="quantity">How much money do you have?</label>
+		<input type="number" id="quantity" name="quantity">
+		<input type="submit">
+	</form>
+</div>
+
+{% endblock %}

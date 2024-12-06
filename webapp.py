@@ -69,7 +69,13 @@ def authorized():
         try:
             session['github_token'] = (resp['access_token'], '') #save the token to prove that the user logged in
             session['user_data']=github.get('user').data
-            session['user_login']=github.get('login').data 
+            session['user_login']=github.get('login').data
+            username = session['user_data']['login']
+            for doc in mongoUsers.find({"User":username}):
+                user = doc
+            if user == "":
+                doc = {"User": username, "Banned":"Yes"}
+                mongoPosts.insert_one(doc)
             message='You were successfully logged in as ' + session['user_data']['login'] + '.'
         except Exception as inst:
             session.clear()
@@ -80,7 +86,6 @@ def authorized():
 
 @app.route('/thechatroom')
 def renderTheChatRoom():
-    
     posts = ""
     for doc in mongoPosts.find():
         posts += Markup("<p>" + str(doc["User"]) + ": " + str(doc["Post"]) + "</p>" + "<br>")
