@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block title %}The Chat Room{% endblock %}
+
+{% block content %}
+  <h1>Gloat about all your riches here.</h1>
+
+<p>Mirror mirror on the wall, who is the wealthiest of them all?</p>
+
+<br>
+
+<p>{{ posts }}</p>
+
+<br>
+
+doc = {“key1”:“value1”, “key2”:“value2”}
+collection.insert_one(doc)
+
+<div class="container">
+  <form action=/createPost method="POST">
+    <div class="form-group">
+      <label for="content">Type anything here:</label>
+      <input type="text" class="form-control" id="content" name="content" required>
+	  <br>
+	  <input type="submit">
+    </div>
+  </form>
+</div>
+
+{% endblock %}
