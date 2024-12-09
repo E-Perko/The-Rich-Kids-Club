@@ -71,10 +71,10 @@ def authorized():
             session['user_data']=github.get('user').data
             session['user_login']=github.get('login').data
             username = session['user_data']['login']
-            for doc in mongoUsers.find({"User":username}):
-                user = doc
-            if user == "":
-                doc = {"User": username, "Banned":"Yes"}
+            user = mongoUsers.find_one({"User":username})
+            print(user)
+            if user == None:
+                doc = {"User": username, "Banned":"No"}
                 mongoPosts.insert_one(doc)
             message='You were successfully logged in as ' + session['user_data']['login'] + '.'
         except Exception as inst:
