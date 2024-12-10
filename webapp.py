@@ -74,17 +74,16 @@ def authorized():
             user = mongoUsers.find_one({"User":username})
             print(user)
             if user == None:
-                doc = {"User": username, "Banned":"No"}
-                mongoPosts.insert_one(doc)
+                doc = {"User": username, "Banned":"No", "Form":"No"}
+                mongoUsers.insert_one(doc)
             message='You were successfully logged in as ' + session['user_data']['login'] + '.'
         except Exception as inst:
             session.clear()
             print(inst)
-            message='Unable to login, please try again.  '
+            message='Unable to login, please try again.'
     return render_template('message.html', message=message)
 
-
-@app.route('/thechatroom')
+@app.route('/thechatroom', methods=['GET','POST'])
 def renderTheChatRoom():
     posts = ""
     for doc in mongoPosts.find():
@@ -95,12 +94,16 @@ def renderTheChatRoom():
 def render_post():
     content = request.form['content']
     username = session['user_data']['login']
-    doc = {"User": username, "Post":content}
-    mongoPosts.insert_one(doc)
-    posts = ""
-    for doc in mongoPosts.find():
-        posts += Markup("<p>" + str(doc["User"]) + ": " + str(doc["Post"]) + "</p>" + "<br>")
-    return render_template('thechatroom.html', posts=posts)
+    if "Post" not in session:
+        doc = {"User": username, "Post":content}
+        mongoPosts.insert_one(doc)
+        session["Post"] = content
+    else:
+        if content != session["Post"]:
+            doc = {"User": username, "Post":content}
+            mongoPosts.insert_one(doc)
+            session["Post"] = content
+    return redirect(url_for("renderTheChatRoom"))
 
 @app.route('/googleb4c3aeedcc2dd103.html')
 def render_google_verification():
@@ -109,7 +112,6 @@ def render_google_verification():
 @github.tokengetter
 def get_github_oauth_token():
     return session['github_token']
-
 
 if __name__ == '__main__':
     app.run(debug=True)
