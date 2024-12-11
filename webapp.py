@@ -3,6 +3,7 @@ from flask_oauthlib.client import OAuth
 #from flask_oauthlib.contrib.apps import github #import to make requests to GitHub's OAuth
 from flask import render_template
 from markupsafe import Markup
+from bson.objectid import ObjectId
 
 import pymongo
 import os
@@ -52,7 +53,7 @@ def home():
 
 @app.route('/login')
 def login():   
-    return github.authorize(callback=url_for('authorized', _external=True, _scheme='http')) #callback URL must match the pre-configured callback URL
+    return github.authorize(callback=url_for('authorized', _external=True, _scheme='http'))
 
 @app.route('/logout')
 def logout():
@@ -64,7 +65,7 @@ def authorized():
     resp = github.authorized_response()
     if resp is None:
         session.clear()
-        message = 'Access denied: reason=' + request.args['error'] + ' error=' + request.args['error_description'] + ' full=' + pprint.pformat(request.args)      
+        message = 'Access denied: reason=' + request.args['error'] + ' error=' + request.args['error_description'] + ' full=' + pprint.pformat(request.args)
     else:
         try:
             session['github_token'] = (resp['access_token'], '') #save the token to prove that the user logged in
@@ -72,23 +73,32 @@ def authorized():
             session['user_login']=github.get('login').data
             username = session['user_data']['login']
             user = mongoUsers.find_one({"User":username})
-            print(user)
             if user == None:
                 doc = {"User": username, "Banned":"No", "Form":"No"}
                 mongoUsers.insert_one(doc)
             message='You were successfully logged in as ' + session['user_data']['login'] + '.'
+            if user["Form"] == "No":
+                return render_template('question.html')
         except Exception as inst:
             session.clear()
             print(inst)
             message='Unable to login, please try again.'
     return render_template('message.html', message=message)
-
+                
 @app.route('/thechatroom', methods=['GET','POST'])
 def renderTheChatRoom():
+    if "user_data" not in session: 
+        return github.authorize(callback=url_for('authorized', _external=True, _scheme='http'))
+    username = session['user_data']['login']
+    user = mongoUsers.find_one({"User":username})
+    if user["Form"] == "No":
+        return render_template('question.html')
+    if user["Banned"] == "Yes":
+        return render_template('banned.html')
     posts = ""
     for doc in mongoPosts.find():
         posts += Markup("<p>" + str(doc["User"]) + ": " + str(doc["Post"]) + "</p>" + "<br>")
-    return render_template('thechatroom.html', posts=posts)
+    return render_template('thechatroom.html')
     
 @app.route("/createPost", methods=['GET','POST'])
 def render_post():
@@ -104,7 +114,17 @@ def render_post():
             mongoPosts.insert_one(doc)
             session["Post"] = content
     return redirect(url_for("renderTheChatRoom"))
-
+    
+@app.route("/checkQuestion", methods=['GET','POST'])
+def render_questionCheck():
+    username = session['user_data']['login']
+    user = mongoUsers.find_one({"User":username})
+    mongoUsers.update_one({"User": username}, {'$set': {"Form":"Yes"}})
+    quantity = request.form['quantity']
+    if quantity <= str(100000000):
+        mongoUsers.update_one({"User": username}, {'$set': {"Banned":"Yes"}})
+    return redirect(url_for("renderTheChatRoom"))
+    
 @app.route('/googleb4c3aeedcc2dd103.html')
 def render_google_verification():
     return render_template('googleb4c3aeedcc2dd103.html')

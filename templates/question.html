@@ -8,9 +8,11 @@
 <br>
 
 <div class="container">
-	<form action="/action_page.php">
-		<label for="quantity">How much money do you have?</label>
+	<form action="/checkQuestion" method="POST">
+		<label for="quantity">How much money do you have? (In US dollars)</label>
+		<br><br>
 		<input type="number" id="quantity" name="quantity" required>
+		<br><br>
 		<input type="submit">
 	</form>
 </div>
