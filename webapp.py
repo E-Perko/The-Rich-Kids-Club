@@ -87,7 +87,7 @@ def authorized():
 @app.route('/thechatroom', methods=['GET','POST'])
 def renderTheChatRoom():
     if "user_data" not in session: 
-        return github.authorize(callback=url_for('authorized', _external=True, _scheme='http'))
+        return github.authorize(callback=url_for('authorized', _external=True, _scheme='https'))
     username = session['user_data']['login']
     user = mongoUsers.find_one({"User":username})
     if user["Form"] == "No":
